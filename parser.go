@@ -152,7 +152,7 @@ func ParseAstComments(commentMap ast.CommentMap) map[string][]*ast.Comment {
 
 func (p *parser) skip(dir, path string, f os.FileInfo) error {
 	if f.IsDir() {
-		if f.Name() == "vendor" || f.Name()[0] == '.' {
+		if f.Name() == "vendor" || (len(f.Name()) > 1 && f.Name()[0] == '.') {
 			return filepath.SkipDir
 		}
 		rel, err := filepath.Rel(dir, path)
