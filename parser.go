@@ -46,6 +46,9 @@ func ParseDir(dir string, excludeDirs []string, mode goparser.Mode) map[string]*
 		if f.IsDir() {
 			return nil
 		}
+		if filepath.Ext(f.Name()) != ".go" || strings.HasSuffix(strings.ToLower(f.Name()), "_test.go") {
+			return filepath.SkipDir
+		}
 
 		relPath, err := filepath.Rel(dir, path)
 		if err != nil {
@@ -160,10 +163,6 @@ func (p *parser) skip(dir, path string, f os.FileInfo) error {
 			return filepath.SkipDir
 		}
 		if p.excludes != nil && inSlice(rel, p.excludes) {
-			return filepath.SkipDir
-		}
-	} else {
-		if filepath.Ext(f.Name()) != ".go" || strings.HasSuffix(strings.ToLower(f.Name()), "_test.go") {
 			return filepath.SkipDir
 		}
 	}
