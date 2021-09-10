@@ -11,7 +11,7 @@ import (
 )
 
 type parser struct {
-	// excludes string
+	excludes  []string
 	pkgs      map[string]*PackageDefinition
 	parseMode goparser.Mode
 }
@@ -31,15 +31,16 @@ type PackageDefinition struct {
 	Files map[string]*AstFileInfo
 }
 
-func ParseDir(dir string, mode goparser.Mode) map[string]*PackageDefinition {
+func ParseDir(dir string, excludeDirs []string, mode goparser.Mode) map[string]*PackageDefinition {
 	p := &parser{
 		pkgs:      make(map[string]*PackageDefinition),
 		parseMode: mode,
+		excludes:  excludeDirs,
 	}
 	// search dir all go file
 	filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 
-		if err := p.skip(path, f); err != nil {
+		if err := p.skip(dir, path, f); err != nil {
 			return err
 		}
 		if f.IsDir() {
@@ -149,9 +150,16 @@ func ParseAstComments(commentMap ast.CommentMap) map[string][]*ast.Comment {
 	return comments
 }
 
-func (p *parser) skip(path string, f os.FileInfo) error {
+func (p *parser) skip(dir, path string, f os.FileInfo) error {
 	if f.IsDir() {
 		if f.Name() == "vendor" || f.Name()[0] == '.' {
+			return filepath.SkipDir
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return filepath.SkipDir
+		}
+		if p.excludes != nil && inSlice(rel, p.excludes) {
 			return filepath.SkipDir
 		}
 	} else {
@@ -160,4 +168,13 @@ func (p *parser) skip(path string, f os.FileInfo) error {
 		}
 	}
 	return nil
+}
+
+func inSlice(s string, slice []string) bool {
+	for _, str := range slice {
+		if s == str {
+			return true
+		}
+	}
+	return false
 }

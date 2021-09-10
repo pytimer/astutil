@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	pkgs := astutil.ParseDir("./testdata", goparser.ParseComments)
+	pkgs := astutil.ParseDir("./testdata", []string{"vendor"}, goparser.ParseComments)
 	for k, pkg := range pkgs {
 		log.Printf("package path: %s, name: %s\n", k, pkg.Name)
 		for _, f := range pkg.Files {
