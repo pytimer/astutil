@@ -47,7 +47,7 @@ func ParseDir(dir string, excludeDirs []string, mode goparser.Mode) map[string]*
 			return nil
 		}
 		if filepath.Ext(f.Name()) != ".go" || strings.HasSuffix(strings.ToLower(f.Name()), "_test.go") {
-			return filepath.SkipDir
+			return nil
 		}
 
 		relPath, err := filepath.Rel(dir, path)
