@@ -22,7 +22,7 @@ type AstFileInfo struct {
 	File *ast.File
 	// PackagePath package import path of the ast.File
 	PackagePath string
-	Comments    map[string][]*ast.Comment
+	Comments    ast.CommentMap
 }
 
 type PackageDefinition struct {
@@ -68,9 +68,9 @@ func (p *parser) parseFile(packageDir, path string, src interface{}) error {
 	}
 	// ast.Print(fset, astFile)
 
-	var comments map[string][]*ast.Comment
+	var comments ast.CommentMap
 	if p.parseMode == goparser.ParseComments {
-		comments = p.getAstComments(fset, astFile)
+		comments = ast.NewCommentMap(fset, astFile, astFile.Comments)
 	}
 
 	if p.pkgs == nil {
@@ -110,11 +110,9 @@ func (p *parser) parseFile(packageDir, path string, src interface{}) error {
 	return nil
 }
 
-func (p *parser) getAstComments(fset *token.FileSet, astFile *ast.File) map[string][]*ast.Comment {
+func ParseAstComments(commentMap ast.CommentMap) map[string][]*ast.Comment {
 	comments := make(map[string][]*ast.Comment)
-	cmap := ast.NewCommentMap(fset, astFile, astFile.Comments)
-
-	for node := range cmap {
+	for node := range commentMap {
 		var name string
 		switch n := node.(type) {
 		case *ast.FuncDecl:
@@ -143,7 +141,7 @@ func (p *parser) getAstComments(fset *token.FileSet, astFile *ast.File) map[stri
 			name = n.Names[0].Name
 		}
 		cs := make([]*ast.Comment, 0)
-		for _, comment := range cmap.Filter(node).Comments() {
+		for _, comment := range commentMap.Filter(node).Comments() {
 			cs = append(cs, comment.List...)
 		}
 		comments[name] = cs
